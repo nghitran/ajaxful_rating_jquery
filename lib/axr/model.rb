@@ -76,13 +76,13 @@ module AjaxfulRating # :nodoc:
       rate = if self.class.axr_config[:allow_update] && rated_by?(user, dimension)
         rate_by(user, dimension)
       else
-        r = rates(dimension).build
-        r.rater = user
-        r
+        rates(dimension).build.tap do |r|
+          r.rater = user
+        end
       end
       rate.stars = stars
       rate.save!
-      self.update_cached_average(dimension)
+      self.update_cached_average(dimension, user.id)
     end
     
     # Builds the DOM id attribute for the wrapper in view.
@@ -173,9 +173,9 @@ module AjaxfulRating # :nodoc:
     end
 
     # Updates the cached average column in the rateable model.
-    def update_cached_average(dimension = nil)
+    def update_cached_average(dimension = nil, rater_id = nil, rate_action = "create")
       if self.class.caching_average?(dimension)
-        update_attribute caching_column_name(dimension), self.rate_average(false, dimension)
+        update_attributes caching_column_name(dimension).to_sym => self.rate_average(false, dimension), :last_rate_action => "#{rate_action}_#{rater_id}"
       end
     end
   end
