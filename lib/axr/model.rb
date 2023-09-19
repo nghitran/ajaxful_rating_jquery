@@ -18,12 +18,12 @@ module AjaxfulRating # :nodoc:
     #     ajaxful_rateable :stars => 10, :cache_column => :custom_column
     #   end
     def ajaxful_rateable(options = {})
-      has_many :rates_without_dimension, :as => :rateable, :class_name => 'Rate',
-        :dependent => :destroy, -> { where :dimension => nil }
+      has_many :rates_without_dimension, lambda { where :dimension => nil }, :as => :rateable, :class_name => 'Rate',
+        :dependent => :destroy
       has_many :raters_without_dimension, :through => :rates_without_dimension, :source => :rater
       
       options[:dimensions].each do |dimension|
-        has_many :"#{dimension}_rates", -> { where :dimension => dimension.to_s }, :dependent => :destroy, :class_name => 'Rate', :as => :rateable
+        has_many :"#{dimension}_rates", lambda { where :dimension => dimension.to_s }, :dependent => :destroy, :class_name => 'Rate', :as => :rateable
         has_many :"#{dimension}_raters", :through => "#{dimension}_rates", :source => :rater
       end if options[:dimensions].is_a?(Array)
 
